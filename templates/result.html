@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 id="plotTitle">{{ plot_title }}</h1>
+        <div class="mt-4" id="imageDiv">
+            {% if image_data %}
+                <img src="data:image/png;base64,{{ image_data }}" alt="Plot" class="img-fluid">
+            {% endif %}
+        </div>
+        <a href="/" class="btn btn-primary mt-4">Go Back</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function plotIndex() {
+            var indexType = document.getElementById('indexType').value;
+            var plotTitle = '';
+
+            // Set the plot title based on the selected index
+            if (indexType === 'ndvi') {
+                plotTitle = 'Normalized Difference Vegetation Index (NDVI)';
+            } else if (indexType === 'mvi') {
+                plotTitle = 'Mangrove Vegetation Index (MVI)';
+            } else if (indexType === 'evi') {
+                plotTitle = 'Enhanced Vegetation Index (EVI)';
+            } else if (indexType === 'ndwi') {
+                plotTitle = 'Normalized Difference Water Index (NDWI)';
+            } else if (indexType === 'mndwi') {
+                plotTitle = 'Modified Normalized Difference Water Index (MNDWI)';
+            }
+
+            // Update the plot title on the result page
+            document.getElementById('plotTitle').innerText = plotTitle;
+
+            // Fetch the updated plot image based on the selected index
+            fetch('/result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `index_type=${indexType}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('imageDiv').innerHTML = `<img src="data:image/png;base64,${data}" alt="Plot" class="img-fluid">`;
+            });
+        }
+    </script>
+</body>
+</html>
