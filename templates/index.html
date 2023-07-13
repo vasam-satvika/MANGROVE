@@ -20,88 +20,157 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
   <style>
     #mapid {
-      height: 480px;
+      height: 700px;
+      margin-top: 40px;
     }
+    
+    body {
+          background-image: url("{{ url_for('static', filename='HOMmE.png') }}");
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+          background-size: cover;
+          background-color: black!important;
+        }
+    input,
+    select{
+         /* background-color: transparent !important; */
+         color: rgb(22, 21, 21) !important;
+         width: 400px;
+    }
+    
+    label{
+      color: white;
+    }
+   select{
+    width:20%
+   } 
+   .d-none {
+  display: none !important;
+}
+.form-control{
+  width:60%;
+  
+}
+    
+  
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
 </head>
 
 <body>
-  <div class="container">
-  <div id="mapid"></div>
-  <form id="userForm" class="mt-4"> <!-- Added form element with id "userForm" -->
-    <div class="mb-3">
-      <label for="latitude" class="form-label">Latitude</label>
-      <input type="text" class="form-control" id="latitude" name="latitude" required>
-    </div>
-    <div class="mb-3">
-      <label for="longitude" class="form-label">Longitude</label>
-      <input type="text" class="form-control" id="longitude" name="longitude" required>
-    </div>
-    <div class="mb-3">
-      <label for="buffer" class="form-label">Buffer</label>
-      <input type="text" class="form-control" id="buffer" name="buffer" required>
-    </div>
-    <div class="mb-3">
-      <label for="type">Select type:</label>
-      <select class="form-control" name="type" id="type" required>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<!-- NAVIGATION BAR -->
+<header><br><div style="text-align: center; color:aquamarine; font-weight: bold; font-size: 100px;font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;"><h1>Mangroves Analysis In Gujarat </h1></div></header>
+ 
+  <!-- TYPE SELECTION DROPDOWN -->
+
+  <div class="container-fluid" style="margin-top:1%;">
+  <div class="row">
+  
+ 
+  
+ 
+  
+  
+
+
+  <!-- LEAFLET MAP -->
+ <div class="row">
+  <div class="col">
+ 
+    <div id="mapid"></div>
+  </div>
+  <div class="col">
+   
+    <form id="userForm" class="mt-4">
+      <div class="mb-3">
+        <label for="type"> <h2 style="color: white; align-content: center;">Calculation</h2></label>
+        <select class="form-control" name="type" id="type" required>
+
           <option selected disabled>Choose a type</option>
-          <option value="mvi">mvi</option>
-          <option value="ndvi">ndvi</option>
-      </select>
+          <option value="mvi" style="color: black; font-size: large;">&#9660;MVI(Mangrove Vegetation Index)</option>
+          <option value="ndvi" style="color: black; font-size: large;">&#9660;NDVI(Normalised Difference Vegetation Index)</option>
+          <option value="change" style="color: black; font-size: large;">&#9660;Change In mangrove area(Loss or gain)</option>
+        </select>
+        <br>
+        <div class="row input-group mb-3 mx-0">
+            <span class=" input-group-text">From Date</span>
+            <input type="date" class=" form-control" id="fd" name="fromdate"/>
+            <span class="input-group-text ">To Date</span>
+            <input type="date" class=" form-control" id="td" name="todate"  />
+          </div>
+      </div>
+    </form>
+ 
+ 
+  <div id="popup-container" class="popup" style="height: 450px; overflow-y: auto; display:none">
+    <span onclick="togglePopup()" style="cursor: pointer; float: right;">Close</span>
+   
+    <div id="mangrove_area">
+      <br>
+     
+      <img id="plot-img" src="{{ url_for('static', filename='plot.png') }}" alt="Mangrove Area Changes">
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
-  <button onclick="togglePopup()">Toggle Plot</button>
-    <div id="popup-container" class="popup">
-        <span onclick="togglePopup()" style="cursor: pointer; float: right;">Close</span>
-        <img id="plot-img" src="{{ url_for('static', filename='plot.png') }}" alt="Mangrove Area Changes">
+    
+    <div id="types">
+      <br>
+     
+      <img id="plot1-img" src="{{ url_for('static', filename='plot1.png') }}" alt="Mangrove Types">
     </div>
-  <div id="lat_lon" class="text-center mt-4"></div>
-    <div id="imgcont">
+    
+    <div id="health">
+      <br>
+     
+      <img id="plot2-img" src="{{ url_for('static', filename='plot2.png') }}" alt="Mangrove Health">
+    </div>
+
+</div>
+<div id="analysis" style="height: 300px; overflow-y: scroll;">
+  <div class="row" style="margin-bottom: 2px;">
+    <div id="imgcont" class="col" style="width: 40%;">
       <!-- {% if img %}
       <h1>NDVI PLOT</h1>
       {% endif %} -->
     </div>
-    <!-- <p id="progress-bar"></p> -->
-    <div id="loader" class="spinner-border text-primary d-block mx-auto my-5 d-none" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-    <canvas id="barChart"></canvas>
-    
-    <button onclick="displayChart()">Display Chart</button>
-    <div id="chartContainer"></div>
+    <div id="chartcont" class="col" style="width: 40%;  "></div>
+  </div>
+  <div id="loader" class=" text-primary d-block mx-auto my-5 d-none" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+</div>
+</div>
+
+  
+ 
+
+
+
+  <!-- NDVI,MVI,CHANGE PLOTS -->
+
+</div>
+<!-- <button onclick="togglePopup()">Toggle Plot</button> -->
+
+
+
+<!-- CHART JS PLOT FOR ANALYSIS -->
+  
+<div id="lat_lon" class="text-center mt-4"></div>
+
 
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
 
   <script>
-       function displayChart() {
-            var chartContainer = document.getElementById('chartContainer');
-            var chartImage = new Image();
-
-            chartImage.onload = function() {
-                chartContainer.innerHTML = '';
-                chartContainer.appendChild(chartImage);
-            };
-
-            chartImage.src = '/plot_chart';
-        }
-  </script>
-  
-  
-  
-
-</script>
-  <script>
-    var map = L.map('mapid').setView([15.805, 80.9], 10);
+    var map = L.map('mapid').setView([22.390472, 69.628927], 10);//Leaflet map set to gujarat area
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'//open street map api
     }).addTo(map);
     
-    var latlng = L.latLng(15.7, 80.85);
+    var latlng = L.latLng(22.390472, 69.628927);
     
     var drawnItems = L.featureGroup().addTo(map);
 
@@ -124,7 +193,7 @@
         featureGroup: drawnItems
       }
     }).addTo(map);
-
+    // Get random color rectangles for multiple area selection
     function getRandomColor() {
       var letters = '0123456789ABCDEF';
       var color = '#';
@@ -146,7 +215,8 @@
       drawControl.remove();
       drawControl.addTo(map);
       var type = document.getElementById("type").value;
-
+      var fdate=document.getElementsByName("fromdate")[0];
+    var tdate=document.getElementsByName("todate")[0];
       // get the coordinates of the selected area
       let coordinates = layer.getLatLngs();
       console.log(coordinates)
@@ -160,7 +230,10 @@
         lng_min: lng_min,
         lng_max: lng_max,
         t: type,
+        t1:fdate.value,
+        t2:tdate.value
       }
+      console.log(data)
       // console.log(data)
       // $(document).ready(function (){
       const xhr = new XMLHttpRequest();
@@ -185,33 +258,97 @@
               document.getElementById('imgcont').innerHTML = xhr.response.status;
             }
             else {
-              document.getElementById("loader").classList.add("d-none")
-              const imgContainer = document.createElement('div');
-              const heading = document.createElement('h3');
-              var randomColor = layer.options.color;
-              if(type=='ndvi'){
-              heading.textContent = 'NDVI PLOT';
-              }
-              else if(type=='mvi'){
-                heading.textContent = 'MVI PLOT';
-              }
-              imgContainer.appendChild(heading);
-              const img = document.createElement('img');
-              img.src = 'data:image/png;base64,' + xhr.response.image;
-              img.style.border = `3px solid ${layer.options.color}`;
-              imgContainer.appendChild(img);
+              const mangroveData = xhr.response.mangrove_data;
+  const yearData = xhr.response.year_data;
 
-              // Add the image element to the document body
-              document.getElementById('imgcont').appendChild(imgContainer);
+  // Draw the image
+  const imgContainer = document.createElement('div');
+  const heading = document.createElement('h3');
+
+  if (type == 'ndvi') {
+    heading.textContent = 'NDVI PLOT';
+  } else if (type == 'mvi') {
+    heading.textContent = 'MVI PLOT';
+  }
+  else{
+    heading.textContent = 'Mangrove Change';
+  }   
+  heading.style.color="white"
+  imgContainer.appendChild(heading);
+  const img = document.createElement('img');
+  img.src = 'data:image/png;base64,' + xhr.response.image;
+  img.style.border = `3px solid ${layer.options.color}`;
+  img.style.width='100%';
+  img.style.height='210px';
+  imgContainer.appendChild(img);
+  const m = document.getElementById('mapid');
+    m.style.height = "680px";
+
+  const p=document.getElementById("popup-container");
+  p.style.display="block";
+  // Add the image element to the document body
+  document.getElementById('imgcont').appendChild(imgContainer);
+  // const m = document.getElementById('mapid');
+  // m.style.width = "45%"
+  // Draw the chart
+  // const chartContainer = document.createElement('div');
+  const chartCanvas = document.createElement('canvas');
+  chartCanvas.style.backgroundColor="white";
+  chartCanvas.style.marginTop="40px";
+  // chartCanvas.style.marginBottom="90px";
+  chartCanvas.id = 'myChart';
+  
+const chartContainer = document.createElement('div');
+
+chartContainer.appendChild(chartCanvas);
+
+  // chartContainer.appendChild(chartCanvas);
+
+document.getElementById('chartcont').appendChild(chartContainer);
+  // document.getElementById('chartcont').appendChild(chartCanvas);
+  
+  // Create the chart using Chart.js
+  new Chart(chartCanvas, {
+    type: 'bar',
+    backgroundColor: 'white',
+    data: {
+      labels: yearData,
+      datasets: [{
+        label: 'Mangrove',
+        data: mangroveData,
+        backgroundColor: `${layer.options.color}`,
+        borderColor: `${layer.options.color}`,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(0, 123, 255, 1)",
+        pointBorderColor: "rgba(0, 0, 0, 0)",
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "rgba(0, 123, 255, 1)",
+        pointHoverBorderColor: "rgba(0, 0, 0, 0)",
+        labelFontColor:"white"
+
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+          
+        }
+      }
+      
+    }
+    
+  });
+ 
             }
           }
         }
-      };
-
+      }
       xhr.send(JSON.stringify(data));
 
       //document.getElementById("lat_lon").innerHTML = `The Selected values range is <br>Latitude = (${lat_min}, ${lat_max})<br>Longitude = (${lng_min}, ${lng_max})`
-    });
+});
 
         // Added event listener for form submission
         document.getElementById("userForm").addEventListener("submit", function (event) {
@@ -228,24 +365,29 @@
     var longitude = document.getElementById("longitude").value;
     var buffer = document.getElementById("buffer").value;
     var type = document.getElementById("type").value;
-
+    var fdate=document.getElementById("fd").value;
+    var tdate=document.getElementById("td").value;
     // Create the data object to send to the Flask application
     var data = {
       lat_min: parseFloat(latitude) - parseFloat(buffer),
       lat_max: parseFloat(latitude) + parseFloat(buffer),
       lng_min: parseFloat(longitude) - parseFloat(buffer),
       lng_max: parseFloat(longitude) + parseFloat(buffer),
-      t: type
+      t: type,
+      t1:fdate,
+      t2:tdate
     };
     console.log(latitude)
-    document.getElementById("loader").classList.remove("d-none")
+    document.getElementById("loader").classList.add("d-none");
+
     // Send the data to the Flask application using AJAX
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/my_flask_route", true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.responseType = "json";
 
-    document.getElementById("loader").classList.remove("d-none")
+    document.getElementById("loader").classList.add("d-none");
+
       xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.UNSENT) {
           console.log("In Progress");
@@ -262,22 +404,62 @@
               const heading = document.createElement('h3');
               //const para=document.createElement('p');
              // para.textContent=`The Selected values range is <br>Latitude = (${lat_min}, ${lat_max})<br>Longitude = (${lng_min}, ${lng_max}`;
-             if(type=='ndvi'){
-                heading.textContent = 'NDVI PLOT';
-               }
-               else if(type=='mvi'){
-                 heading.textContent = 'MVI PLOT';
-                }
-            //heading.textContent = 'NDVI PLOT';
-             // imgContainer.appendChild(para);
-              imgContainer.appendChild(heading);
-              const img = document.createElement('img');
-              img.src = 'data:image/png;base64,' + xhr.response.image;
-              imgContainer.appendChild(img);
+             const mangroveData = xhr.response.mangrove_data;
+  const yearData = xhr.response.year_data;
 
-              // Add the image element to the document body
-              document.getElementById('imgcont').appendChild(imgContainer);
-            }
+  // Draw the image
+ 
+  if (type == 'ndvi') {
+    heading.textContent = 'NDVI PLOT';
+  } else if (type == 'mvi') {
+    heading.textContent = 'MVI PLOT';
+  }
+  
+  imgContainer.appendChild(heading);
+  const img = document.createElement('img');
+  img.src = 'data:image/png;base64,' + xhr.response.image;
+  img.style.border = `3px solid ${layer.options.color}`;
+  imgContainer.appendChild(img);
+
+  // Add the image element to the document body
+  document.getElementById('imgcont').appendChild(imgContainer);
+
+  // Draw the chart
+  const chartContainer = document.createElement('div');
+  const chartCanvas = document.createElement('canvas');
+  chartCanvas.id = 'myChart';
+  chartContainer.appendChild(chartCanvas);
+  document.getElementById('imgcont').appendChild(chartContainer);
+
+  // Create the chart using Chart.js
+  new Chart(chartCanvas, {
+    type: 'bar',
+    data: {
+      labels: yearData,
+      datasets: [{
+        label: 'Mangrove',
+        data: mangroveData,
+        backgroundColor: `${layer.options.color}`,
+        borderColor: `${layer.options.color}`,
+        borderWidth: 1,
+        pointRadius: 3,
+        pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+        pointBorderColor: 'rgba(0, 0, 0, 0)',
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: 'rgba(0, 123, 255, 1)',
+        pointHoverBorderColor: 'rgba(0, 0, 0, 0)',
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
           }
         }
       };
