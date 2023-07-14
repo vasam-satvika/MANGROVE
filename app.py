@@ -234,4 +234,4 @@ def my_flask_function():
         return jsonify({'image': img_base64,'mangrove_data':mangrove1,'year_data':year})
 
 if __name__ == '__main__':
-    app.run(port = 5002,debug=True)
+    app.run(host='0.0.0.0',port = 5002,debug=True)
