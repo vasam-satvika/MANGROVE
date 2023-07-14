@@ -109,7 +109,7 @@ def my_flask_function():
         # display_map(x=lon_range, y=lat_range)
         try:
             ds = dc.load(product="s2a_sen2cor_granule",
-                            measurements=["B04_10m","B03_10m","B02_10m", "B08_10m", "SCL_20m", "B11_20m"],
+                            measurements=["red","green","blue", "nir", "swir_1"],
                         x=lon_range,
                         y=lat_range,
                         time=time_range,
@@ -117,14 +117,14 @@ def my_flask_function():
                         resolution=(-30, 30))
             dataset = ds
             dataset =  odc.algo.to_f32(dataset)
-            band_diff = dataset.B08_10m - dataset.B04_10m
-            band_sum = dataset.B08_10m + dataset.B04_10m
+            band_diff = dataset.nir - dataset.red
+            band_sum = dataset.nir + dataset.red
         except Exception as e:
             return jsonify({'error': "No Data Found"})
 
 
         ndvi = band_diff / band_sum
-        mvi = (dataset.B08_10m - dataset.B03_10m) / (dataset.B11_20m - dataset.B03_10m)
+        mvi = (dataset.nir - dataset.green) / (dataset.swir_1 - dataset.green)
         # Calculate NDVI and store it as a measurement in the original dataset
         if (ty=='ndvi'):
             
@@ -156,7 +156,7 @@ def my_flask_function():
                 'lat': lat_range,
                 'lon': lon_range,
                 'time': time_range1,
-                'measurements': ['B04_10m', 'B03_10m', 'B02_10m', 'B08_10m', 'B11_20m', 'B12_20m'],
+                'measurements': ["red","green","blue", "nir", "swir_1"],
                 'product': 's2a_sen2cor_granule',
                 'output_crs': 'EPSG:32644',
                 'resolution': (-10, 10)
@@ -167,7 +167,7 @@ def my_flask_function():
 
 
             # Compute the MVI for the first time period
-            mangrove1 = ((ds1.B08_10m - ds1.B03_10m) / (ds1.B11_20m - ds1.B03_10m))
+            mangrove1 = ((ds1.nir - ds1.green) / (ds1.swir_1 - ds1.green))
             # Set threshold for mangrove detection
             mangrove_thresh = 10
 
@@ -179,7 +179,7 @@ def my_flask_function():
             ds2 = dc.load(**query)
 
             # Compute the MVI for the second time period
-            mangrove2 = ((ds2.B08_10m - ds2.B03_10m) / (ds2.B11_20m - ds2.B03_10m))
+            mangrove2 = ((ds2.nir - ds2.green) / (ds2.swir_1 - ds2.green))
             # Create a mangrove mask
             mangrove_mask2 = np.where(mangrove2 > mangrove_thresh, 1, 0)
 
