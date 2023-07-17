@@ -17,6 +17,80 @@ import matplotlib.pyplot as plt  # Importing Matplotlib library for plotting and
 from deafrica_tools.plotting import display_map, rgb  # Importing display_map and rgb functions from deafrica_tools.plotting for map visualization
 
 dc = datacube.Datacube(app="04_Plotting") #creates an instance of the Datacube class from the datacube module.
+def mang_ml_analysis(ds, lat_range, lon_range):
+    ndvi = (ds.nir - ds.red) / (ds.nir + ds.red)
+    mvi = ds.nir - ds.green / ds.swir_1 - ds.green
+    ndvi_threshold = 0.4
+
+    # Create forest mask based on NDVI
+    mangrove_mask_ndvi = np.where(ndvi > ndvi_threshold, 1, 0)
+
+    mvi_threshold = 3.5
+
+    # Create forest mask based on MVI within the threshold range
+    mangrove_mask_mvi = np.where(mvi > mvi_threshold, 1, 0)
+
+    regular_mask = np.where(ndvi <= 0.6, True, False)
+    closed_mask = np.where(ndvi > 0.6, True, False)
+
+    mangrove = np.logical_and(mangrove_mask_ndvi, mangrove_mask_mvi)
+    regular = np.logical_and(mangrove, regular_mask)
+    closed = np.logical_and(mangrove, closed_mask)
+
+    # Calculate the area of each pixel
+    pixel_area = abs(ds.geobox.affine[0] * ds.geobox.affine[4])
+
+    data = [['day', 'month', 'year', 'mangrove', 'regular', 'closed', 'total']]
+    regular_values = []
+    closed_values = []
+
+    for i in range(mangrove.shape[0]):
+        data_time = str(ndvi.time[i].values).split("T")[0]
+        new_data_time = data_time.split("-")
+
+        # Calculate the total mangrove cover area
+        mangrove_cover_area = np.sum(mangrove[i]) * pixel_area
+        regular_cover_area = np.sum(regular[i]) * pixel_area
+        closed_cover_area = np.sum(closed[i]) * pixel_area
+
+        original_array = np.where(ndvi > -10, 1, 0)
+        original = np.sum(original_array[i]) * pixel_area
+        regular_values.append(regular_cover_area / 1000000)
+        closed_values.append(closed_cover_area / 1000000)
+
+        data.append([new_data_time[2], new_data_time[1], new_data_time[0], mangrove_cover_area / 1000000,
+                     regular_cover_area / 1000000, closed_cover_area / 1000000, original / 1000000])
+
+    df = pd.DataFrame(data[1:], columns=data[0])
+    df["year-month"] = df["year"].astype('str') + "-" + df["month"].astype('str')
+
+    grouped_df = df.groupby(['year', 'month'])
+    mean_forest_field = grouped_df['mangrove'].mean()
+    mean_forest_field = mean_forest_field.reset_index()
+
+    df = mean_forest_field
+
+    years = df["year"].tolist()
+
+    X = df[["year", "month"]]
+    y = df["mangrove"]
+
+    rf_regressor = RandomForestRegressor(n_estimators=100, random_state=101)
+    rf_regressor.fit(X, y)
+    y_pred = rf_regressor.predict(X)
+
+    labels = df["year"].tolist()
+    actual_values = df['mangrove'].tolist()
+   
+    predicted_values = y_pred.tolist()
+
+    return {
+        "labels": labels,
+        "actual_values": actual_values,
+        "predicted_values": predicted_values,
+        "regular":regular_values,
+        "closed":closed_values
+    }
 
 app = Flask(__name__)
 # @app.route("/")
@@ -26,70 +100,8 @@ app = Flask(__name__)
 @app.route("/")
 def hello_world():
         # Read the merged CSV file
-    df = pd.read_csv('ml_mangrove_data.csv')
-
-    # Select the relevant columns for training
-    features = ['month', 'year']
-    target = ['mangrove', 'regular', 'closed', 'healthy', 'unhealthy']
-
-    # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=42)
-
-    # Initialize the Random Forest Regressor
-    model = RandomForestRegressor()
-
-    # Train the model
-    model.fit(X_train, y_train)
-
-    # Make predictions on the testing set
-    y_pred = model.predict(X_test)
-
-    # Prepare the data for plotting
-    df_plot = pd.DataFrame({'Year': X_test['year'], 'Month': X_test['month'], 'Actual mangrove': y_test['mangrove'],
-                            'Predicted mangrove': y_pred[:, 0],'Actual regular': y_test['regular'],'Actual closed': y_test['closed'],'Actual healthy': y_test['healthy'],'Actual unhealthy': y_test['unhealthy']})
-
-    # Sort the data by year and month
-    df_plot = df_plot.sort_values(['Year', 'Month'])
-
-    # Create a single index combining year and month
-    df_plot['Year-Month'] = df_plot['Year'].astype(str) + '-' + df_plot['Month'].astype(str)
-
-    # Generate the plot
-    plt.figure(figsize=(8, 4))
-    plt.plot(df_plot['Year-Month'], df_plot['Actual mangrove'], 'o-', label='Actual mangrove_area')
-    plt.plot(df_plot['Year-Month'], df_plot['Predicted mangrove'], 'o-', label='Predicted mangrove_area')
-    plt.xlabel('Year-Month')
-    plt.ylabel('Area')
-    plt.title('Mangrove Areas')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('static/plot.png')  # Save the plot as a file
-
-    # Generate the plot
-    plt.figure(figsize=(8, 4))
-    plt.plot(df_plot['Year-Month'], df_plot['Actual regular'], 'o-', label='Regular')
-    plt.plot(df_plot['Year-Month'], df_plot['Actual closed'], 'o-', label='Closed')
-    plt.xlabel('Year-Month')
-    plt.ylabel('Area')
-    plt.title('Mangrove Type')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('static/plot1.png')  # Save the plot as a file
-
-    # Generate the plot
-    plt.figure(figsize=(8, 4))
-    plt.plot(df_plot['Year-Month'], df_plot['Actual healthy'], 'o-', label='Healthy')
-    plt.plot(df_plot['Year-Month'], df_plot['Actual unhealthy'], 'o-', label='Unhealthy')
-    plt.xlabel('Year-Month')
-    plt.ylabel('Area')
-    plt.title('Mangrove Health')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('static/plot2.png')  # Save the plot as a file
-
+        
+    
     return render_template("index.html")
 
 @app.route('/my_flask_route', methods=['GET', 'POST'])
@@ -228,10 +240,11 @@ def my_flask_function():
             mangrove_cover_area = np.sum(mangrove[i]) * pixel_area
             mangrove1.append(mangrove_cover_area/1000000)
 
-
-
+        
+        a = mang_ml_analysis(ds, lat_range, lon_range)
+        print(a)
     # Return the base64 encoded PNG image as JSON
-        return jsonify({'image': img_base64,'mangrove_data':mangrove1,'year_data':year})
+        return jsonify({'image': img_base64,'mangrove_data':mangrove1,'year_data':year,'a': a})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port = 5002,debug=True)
+    app.run(host='0.0.0.0',debug=True)
