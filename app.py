@@ -125,7 +125,7 @@ def my_flask_function():
                         x=lon_range,
                         y=lat_range,
                         time=time_range,
-                        output_crs='EPSG:6933',
+                        output_crs='EPSG:3857',
                         resolution=(-30, 30))
             dataset = ds
             dataset =  odc.algo.to_f32(dataset)
@@ -170,7 +170,7 @@ def my_flask_function():
                 'time': time_range1,
                 'measurements': ["red","green","blue", "nir", "swir_1"],
                 'product': 's2a_sen2cor_granule',
-                'output_crs': 'EPSG:32644',
+                'output_crs': 'EPSG:3875',
                 'resolution': (-10, 10)
             }
 

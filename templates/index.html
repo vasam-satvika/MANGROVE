@@ -126,24 +126,14 @@
   
 </div>
 
-
-
-
-
-
-  <!-- NDVI,MVI,CHANGE PLOTS -->
-
 </div>
 <!-- <button onclick="togglePopup()">Toggle Plot</button> -->
 
-
-
-<!-- CHART JS PLOT FOR ANALYSIS -->
-  
 <div id="lat_lon" class="text-center mt-4"></div>
 
-
   </div>
+
+<!-- CHART JS PLOT FOR ANALYSIS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
 
   <script>
@@ -411,144 +401,13 @@ new Chart(lineChartCanvas, {
       //document.getElementById("lat_lon").innerHTML = `The Selected values range is <br>Latitude = (${lat_min}, ${lat_max})<br>Longitude = (${lng_min}, ${lng_max})`
 });
 
-        // Added event listener for form submission
-        document.getElementById("userForm").addEventListener("submit", function (event) {
-      event.preventDefault(); // Prevent the form from submitting and refreshing the page
 
-      // var formData = new FormData(this);
-      // var data = {};
-      // for (var [key, value] of formData.entries()) {
-      //   data[key] = value;
-      // }
-
-       // Get the input values
-    var latitude = document.getElementById("latitude").value;
-    var longitude = document.getElementById("longitude").value;
-    var buffer = document.getElementById("buffer").value;
-    var type = document.getElementById("type").value;
-    var fdate=document.getElementById("fd").value;
-    var tdate=document.getElementById("td").value;
-    // Create the data object to send to the Flask application
-    var data = {
-      lat_min: parseFloat(latitude) - parseFloat(buffer),
-      lat_max: parseFloat(latitude) + parseFloat(buffer),
-      lng_min: parseFloat(longitude) - parseFloat(buffer),
-      lng_max: parseFloat(longitude) + parseFloat(buffer),
-      t: type,
-      t1:fdate,
-      t2:tdate
-    };
-    console.log(latitude)
-    document.getElementById("loader").classList.add("d-none");
-
-    // Send the data to the Flask application using AJAX
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/my_flask_route", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.responseType = "json";
-
-    document.getElementById("loader").classList.add("d-none");
-
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === XMLHttpRequest.UNSENT) {
-          console.log("In Progress");
-        } else if (xhr.readyState === XMLHttpRequest.DONE) {
-          if (xhr.status === 200) {
-            // Process the response here
-            if (xhr.response.error) {
-              document.getElementById("loader").classList.add("d-none")
-              document.getElementById('imgcont').innerHTML = xhr.response.status;
-            }
-            else {
-              document.getElementById("loader").classList.add("d-none")
-              const imgContainer = document.createElement('div');
-              const heading = document.createElement('h3');
-              //const para=document.createElement('p');
-             // para.textContent=`The Selected values range is <br>Latitude = (${lat_min}, ${lat_max})<br>Longitude = (${lng_min}, ${lng_max}`;
-             const mangroveData = xhr.response.mangrove_data;
-  const yearData = xhr.response.year_data;
-
-  // Draw the image
- 
-  if (type == 'ndvi') {
-    heading.textContent = 'NDVI PLOT';
-  } else if (type == 'mvi') {
-    heading.textContent = 'MVI PLOT';
-  }
+  </script>
   
-  imgContainer.appendChild(heading);
-  const img = document.createElement('img');
-  img.src = 'data:image/png;base64,' + xhr.response.image;
-  img.style.border = `3px solid ${layer.options.color}`;
-  imgContainer.appendChild(img);
 
-  // Add the image element to the document body
-  document.getElementById('imgcont').appendChild(imgContainer);
-
-  // Draw the chart
-  const chartContainer = document.createElement('div');
-  const chartCanvas = document.createElement('canvas');
-  chartCanvas.id = 'myChart';
-  chartContainer.appendChild(chartCanvas);
-  document.getElementById('imgcont').appendChild(chartContainer);
-
-  // Create the chart using Chart.js
-  new Chart(chartCanvas, {
-    type: 'bar',
-    data: {
-      labels: yearData,
-      datasets: [{
-        label: 'Mangrove',
-        data: mangroveData,
-        backgroundColor: `${layer.options.color}`,
-        borderColor: `${layer.options.color}`,
-        borderWidth: 1,
-        pointRadius: 3,
-        pointBackgroundColor: 'rgba(0, 123, 255, 1)',
-        pointBorderColor: 'rgba(0, 0, 0, 0)',
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: 'rgba(0, 123, 255, 1)',
-        pointHoverBorderColor: 'rgba(0, 0, 0, 0)',
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-
-}
-
-          }
-        }
-      };
-
-      xhr.send(JSON.stringify(data));
-    });
-  </script>
-  <script>
-    
-  </script>
-  <script>
-    function togglePopup() {
-        var popupContainer = document.getElementById('popup-container');
-
-        if (popupContainer.style.display === 'none') {
-            popupContainer.style.display = 'block';
-        } else {
-            popupContainer.style.display = 'none';
-        }
-    }
-</script>
 <script>
   
 </script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"
-  integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE"
-  crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"
   integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ"
   crossorigin="anonymous"></script>
